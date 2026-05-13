@@ -1,6 +1,25 @@
 # GitHub Operations
 
-A collection of lightweight Bash and Python scripts for interacting with the GitHub REST API.
+**🚀 Agent-First GitHub Ops Toolkit**  
+*Minimal Bash + Python scripts for GitHub REST API — perfect for AI agents and power users*
+
+## Agent-First Design (by Grok)
+
+This toolkit is **explicitly Agent-First**:
+
+> “专为 AI Agent / Copilot / 自动化 Bot 设计的最小化 GitHub 操作工具箱。零依赖、可组合、专治 LLM 转义难题。”
+
+- **Zero external dependencies** — runs anywhere (no PyGithub, no octokit)
+- **LLM-safe** — `--body-file`, `--json` outputs, no colorful logs in quiet mode
+- **Multi-round PR review loops** — built for Copilot-style bots (see SKILL.md)
+- **Composable** — every script is a thin wrapper around `gh-api.py`
+
+**Target users:**
+- GitHub Copilot / Devin / Aider / Cursor agents
+- Custom LLM agents using `subprocess`
+- Power users who prefer `curl` + `jq` over heavy SDKs
+
+---
 
 ## About
 
@@ -33,7 +52,7 @@ scripts/gh-comment.sh owner/repo 1 "LGTM"
 scripts/gh-activity.sh <username> 20
 ```
 
-See `SKILL.md` for the full command reference and advanced usage patterns.
+See `SKILL.md` for the full command reference and advanced usage patterns (including agent-specific workflows).
 
 ## License
 
