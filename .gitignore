@@ -1,0 +1,11 @@
+# Editor / OS
+*.swp
+*.swo
+*~
+.DS_Store
+.idea/
+.vscode/
+
+# Temporary files
+/tmp/
+*.tmp

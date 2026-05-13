@@ -45,7 +45,7 @@ with open(path) as f:
 
 reviews = {}
 for c in comments:
-    rid = c["pull_request_review_id"]
+    rid = c.get("pull_request_review_id") or 0
     if rid not in reviews:
         reviews[rid] = []
     reviews[rid].append(c)
@@ -59,7 +59,7 @@ if mode == "latest" and len(sorted_reviews) > 1:
     sorted_reviews = sorted_reviews[-1:]
 
 for rid, cs in sorted_reviews:
-    user = cs[0]["user"]["login"]
+    user = (cs[0].get("user") or {}).get("login", "unknown")
     if filter_user and user != filter_user:
         continue
     print(f"Review {rid} by {user} ({len(cs)} comments):")
