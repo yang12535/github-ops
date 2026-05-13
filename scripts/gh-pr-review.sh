@@ -45,7 +45,7 @@ with open(path) as f:
 
 reviews = {}
 for c in comments:
-    rid = c["pull_request_review_id"]
+    rid = c.get("pull_request_review_id") or 0
     if rid not in reviews:
         reviews[rid] = []
     reviews[rid].append(c)
@@ -59,19 +59,32 @@ if mode == "latest" and len(sorted_reviews) > 1:
     sorted_reviews = sorted_reviews[-1:]
 
 for rid, cs in sorted_reviews:
-    user = cs[0]["user"]["login"]
-    if filter_user and user != filter_user:
-        continue
-    print(f"Review {rid} by {user} ({len(cs)} comments):")
+    # Pick the first non-null user as the group label
+    group_user = "unknown"
+    for c in cs:
+        u = (c.get("user") or {}).get("login")
+        if u:
+            group_user = u
+            break
+
+    # When filtering, check per-comment so mixed groups don't drop matching comments
+    if filter_user:
+        cs = [c for c in cs if ((c.get("user") or {}).get("login") or "unknown") == filter_user]
+        if not cs:
+            continue
+
+    print(f"Review {rid} by {group_user} ({len(cs)} comments):")
     for c in cs:
         path = c["path"]
         line = c.get("line", "?")
+        comment_user = (c.get("user") or {}).get("login", "unknown")
+        user_tag = f" [{comment_user}]" if comment_user != group_user else ""
         if full:
             body = c["body"]
-            print(f"  - {path}:{line} -> {body}")
+            print(f"  - {path}:{line}{user_tag} -> {body}")
         else:
             body = c["body"].replace("\n", " ")[:150]
-            print(f"  - {path}:{line} -> {body}...")
+            print(f"  - {path}:{line}{user_tag} -> {body}...")
     print()
 PYEOF
 

@@ -27,7 +27,7 @@ if not reviews:
     sys.exit(0)
 for r in reviews:
     rid = r["id"]
-    user = r["user"]["login"]
+    user = (r.get("user") or {}).get("login", "unknown")
     state = r["state"]
     body = (r.get("body") or "").replace("\n", " ")[:100]
     print(f"Review {rid} by {user}: {state}")
