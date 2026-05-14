@@ -24,12 +24,16 @@ switch ($Command) {
         if (-not $title) { Write-Error "Usage: gh-issue.ps1 <owner/repo> create <title> [--body <text>|--body-file <path>]"; exit 1 }
         $body = ""
         for ($i = 1; $i -lt $Remaining.Count; $i++) {
-            if ($Remaining[$i] -eq "--body" -and ($i+1) -lt $Remaining.Count) {
+            if ($Remaining[$i] -eq "--body") {
+                if (($i+1) -ge $Remaining.Count) { Write-Error "Usage: --body requires a value"; exit 1 }
                 $body = $Remaining[$i+1]; $i++
-            } elseif ($Remaining[$i] -eq "--body-file" -and ($i+1) -lt $Remaining.Count) {
+            } elseif ($Remaining[$i] -eq "--body-file") {
+                if (($i+1) -ge $Remaining.Count) { Write-Error "Usage: --body-file requires a path"; exit 1 }
                 $bf = $Remaining[$i+1]
                 if (-not (Test-Path $bf)) { Write-Error "Body file not found: $bf"; exit 1 }
                 $body = Get-Content $bf -Raw -ErrorAction Stop; $i++
+            } else {
+                Write-Error "Unknown option: $($Remaining[$i])"; exit 1
             }
         }
         $payload = @{ title = $title }
