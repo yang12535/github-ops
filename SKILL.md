@@ -5,42 +5,70 @@ description: "GitHub repository and workflow operations via authenticated REST A
 
 # GitHub Operations
 
-**Primary method**: Direct GitHub REST API calls via `scripts/gh-api.py` (Python/urllib) or raw `curl`.
-**Quick scripts**: `scripts/gh-*.sh` provide convenient shortcuts for common tasks.
-**Auth source**: `gh auth token` (preferred) → `GITHUB_TOKEN` / `GH_TOKEN` env fallback. Re-authenticate with `gh auth login` only when token is missing.
+**Primary method**: Direct GitHub REST API calls via `scripts/gh-api.py` (Python/urllib) or raw `curl`. On Windows, PowerShell thin wrappers that delegate to `scripts/gh-api.py` (requires Python 3.8+).
+**Quick scripts**: `scripts/linux/gh-*.sh` (Linux/macOS), `scripts/windows/gh-*.ps1` (Windows), and legacy `scripts/gh-*.sh`.
+**Auth source**: `gh auth token` (preferred) → `GITHUB_TOKEN` / `GH_TOKEN` env → `~/.github_token` / `~/.config/github-ops/token` / `~/github_token.txt`. Re-authenticate with `gh auth login` only when token is missing.
 
 ## Quick Start
 
+### Linux / macOS
+
 ```bash
 # Current user profile
-scripts/gh-user.sh
+scripts/linux/gh-user.sh
 
 # View a repository
-scripts/gh-repo.sh owner/repo view
+scripts/linux/gh-repo.sh owner/repo view
 
 # List open issues
-scripts/gh-issue.sh owner/repo list
+scripts/linux/gh-issue.sh owner/repo list
 
 # Comment on an issue or PR
-scripts/gh-comment.sh owner/repo 1 "LGTM"
+scripts/linux/gh-comment.sh owner/repo 1 "LGTM"
 
 # View recent activity
-scripts/gh-activity.sh username 20
+scripts/linux/gh-activity.sh username 20
+```
+
+### Windows (PowerShell)
+
+```powershell
+# Current user profile
+scripts/windows/gh-user.ps1
+
+# View a repository
+scripts/windows/gh-repo.ps1 owner/repo view
+
+# List open issues
+scripts/windows/gh-issue.ps1 owner/repo list
+
+# Create PR
+scripts/windows/gh-pr.ps1 owner/repo create "title" "head-branch" "main" --body "PR description"
 ```
 
 ## Authentication
 
-All scripts auto-resolve the token. If `gh` is completely broken, export the token manually:
+All scripts auto-resolve the token. If `gh` is completely broken, use a token file or export the token manually:
+
 ```bash
+# Linux / macOS
 export GITHUB_TOKEN="ghp_xxxxxxxx"
+echo "ghp_xxxxxxxx" > ~/.github_token
+chmod 600 ~/.github_token
+
+# Windows PowerShell
+$env:GITHUB_TOKEN="ghp_xxxxxxxx"
+"ghp_xxxxxxxx" | Out-File -Encoding utf8 $env:USERPROFILE\.github_token
 ```
 
 Verify token works:
 ```bash
-scripts/gh-user.sh
+scripts/linux/gh-user.sh
+# or
+scripts/windows/gh-user.ps1
 ```
 
-## Bash Quick Scripts
+## Linux / macOS Quick Scripts
 
 ### gh-user.sh — User Profile
 
@@ -249,3 +277,47 @@ scripts/gh-pr-comment.sh owner/repo 8 --body-file /tmp/review-summary.md
 - If `gh auth token` hangs or fails, set `GITHUB_TOKEN` environment variable and retry.
 - Quick scripts forward to `gh-api.py` internally; if a script does not support a specific flag, call `gh-api.py` directly.
 - When writing multi-line comments with backticks or `$`, always use `--body-file` instead of inline `--body` to avoid shell escaping issues.
+
+## Windows Quick Scripts
+
+### gh-user.ps1 — User Profile
+
+```powershell
+scripts/windows/gh-user.ps1              # Current authenticated user
+```
+
+### gh-repo.ps1 — Repository
+
+```powershell
+scripts/windows/gh-repo.ps1 owner/repo view           # Repo details
+scripts/windows/gh-repo.ps1 owner/repo issues         # List open issues
+scripts/windows/gh-repo.ps1 owner/repo prs            # List open PRs
+scripts/windows/gh-repo.ps1 owner/repo commits        # Recent commits
+scripts/windows/gh-repo.ps1 owner/repo releases       # Releases
+scripts/windows/gh-repo.ps1 owner/repo contents path  # File/directory contents
+scripts/windows/gh-repo.ps1 owner/repo url            # Print HTML URL
+```
+
+### gh-issue.ps1 — Issues
+
+```powershell
+scripts/windows/gh-issue.ps1 owner/repo list                              # List open issues
+scripts/windows/gh-issue.ps1 owner/repo view <number>                     # View issue
+scripts/windows/gh-issue.ps1 owner/repo create <title> [--body <text>|--body-file <path>]   # Create issue
+scripts/windows/gh-issue.ps1 owner/repo close <number>                    # Close issue
+scripts/windows/gh-issue.ps1 owner/repo reopen <number>                   # Reopen issue
+scripts/windows/gh-issue.ps1 owner/repo comment <number> <body>           # Add comment
+```
+
+### gh-pr.ps1 — Pull Requests
+
+```powershell
+scripts/windows/gh-pr.ps1 owner/repo list                              # List open PRs
+scripts/windows/gh-pr.ps1 owner/repo view <number>                     # View PR
+scripts/windows/gh-pr.ps1 owner/repo create <title> <head> <base> [--body <text>|--body-file <path>]  # Create PR
+scripts/windows/gh-pr.ps1 owner/repo comments <number>                 # List PR comments
+scripts/windows/gh-pr.ps1 owner/repo merge <number> [merge|squash|rebase] # Merge PR
+scripts/windows/gh-pr.ps1 owner/repo comment <number> <body>           # Add comment
+```
+
+> **Tip**: Use `--body-file` when the PR description contains backticks, quotes, or `$` variables. Typos in `--body-file` paths or unknown options now fail the command instead of creating an incomplete PR.

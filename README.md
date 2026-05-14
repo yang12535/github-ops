@@ -1,6 +1,8 @@
 # GitHub Operations
 
-A collection of lightweight Bash and Python scripts for interacting with the GitHub REST API.
+A collection of lightweight scripts for interacting with the GitHub REST API.
+
+Now split by platform — because **Windows is not Unix**.
 
 ## About
 
@@ -14,23 +16,45 @@ This project provides a minimal, dependency-light toolkit for common GitHub work
 
 All scripts are designed to be readable, composable, and easy to extend.
 
+## Platform Split
+
+| Platform | Directory | Runtime | Notes |
+|---|---|---|---|
+| **Linux / macOS** | `scripts/linux/` | Bash + Python 3 | Original stack, `python3` required |
+| **Windows** | `scripts/windows/` | PowerShell 7+ | Thin wrappers → `scripts/gh-api.py`, requires Python 3.8+ |
+| **Legacy (generic)** | `scripts/` | Bash + Python 3 | Kept for backward compatibility |
+
+> **Why split?** Windows lab environments often have non-standard Python installs (`D:\python313\python`) and `gh` CLI spits GraphQL deprecation noise. The PowerShell wrappers handle Windows paths natively, then delegate all HTTP/JSON/pagination logic to the shared Python backend (`scripts/gh-api.py`). Python 3.8+ is required on all platforms.
+
 ## Quick Start
+
+### Linux / macOS
 
 ```bash
 # User profile
-scripts/gh-user.sh
+scripts/linux/gh-user.sh
 
 # Repository info
-scripts/gh-repo.sh owner/repo view
+scripts/linux/gh-repo.sh owner/repo view
 
 # List open issues
-scripts/gh-issue.sh owner/repo list
+scripts/linux/gh-issue.sh owner/repo list
+```
 
-# Comment on an issue or PR
-scripts/gh-comment.sh owner/repo 1 "LGTM"
+### Windows (PowerShell)
 
-# View recent activity
-scripts/gh-activity.sh <username> 20
+```powershell
+# User profile
+scripts/windows/gh-user.ps1
+
+# Repository info
+scripts/windows/gh-repo.ps1 owner/repo view
+
+# List open PRs
+scripts/windows/gh-pr.ps1 owner/repo list
+
+# Create PR
+scripts/windows/gh-pr.ps1 owner/repo create "title" "head-branch" "main" --body "PR description"
 ```
 
 See `SKILL.md` for the full command reference and advanced usage patterns.
