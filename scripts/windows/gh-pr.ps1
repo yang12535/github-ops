@@ -40,8 +40,13 @@ switch ($Command) {
         }
         $payload = @{ title = $title; head = $head; base = $base }
         if ($body) { $payload.body = $body }
-        $json = $payload | ConvertTo-Json -Compress -Depth 10
-        Invoke-GitHubApi "repos/$Repo/pulls" -Method POST -Data $json
+        $tmpFile = [System.IO.Path]::GetTempFileName()
+        $payload | ConvertTo-Json -Compress -Depth 10 | Set-Content -Path $tmpFile -Encoding utf8NoBOM -NoNewline
+        try {
+            Invoke-GitHubApi "repos/$Repo/pulls" -Method POST -Data "@$tmpFile"
+        } finally {
+            Remove-Item -Path $tmpFile -ErrorAction SilentlyContinue
+        }
     }
     "comments" {
         $num = $Remaining[0]
