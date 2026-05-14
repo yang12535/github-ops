@@ -19,7 +19,6 @@ def get_token():
             return token
     except Exception:
         pass
-    import os
     token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
     if token:
         return token
