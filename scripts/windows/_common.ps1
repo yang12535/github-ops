@@ -56,12 +56,6 @@ function Invoke-GitHubApi {
     if ($Compact) { $pyArgs += "-c" }
     if ($Field) { foreach ($f in $Field) { $pyArgs += @("-f", $f) } }
 
-    try {
-        & python $ApiScript @pyArgs
-    } catch {
-        Write-Host "[github-ops ERROR] $_" -ForegroundColor Red
-        exit 1
-    }
-
+    & python $ApiScript @pyArgs
     exit $LASTEXITCODE
 }
