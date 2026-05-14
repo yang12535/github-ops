@@ -25,6 +25,29 @@ function Invoke-GitHubApi {
         exit 1
     }
 
+    # Pre-flight: verify Python exists and meets version requirement.
+    # This avoids the Microsoft Store shim trap (python.exe on PATH with no real install).
+    $pythonCmd = Get-Command python -ErrorAction SilentlyContinue
+    if (-not $pythonCmd) {
+        Write-Host "[github-ops ERROR] Python interpreter not found." -ForegroundColor Red
+        Write-Host "  This skill requires Python 3.8+ on Windows." -ForegroundColor Yellow
+        Write-Host "  Install: winget install Python.Python.3" -ForegroundColor Cyan
+        Write-Host "  Or download from: https://python.org/downloads/" -ForegroundColor Cyan
+        exit 127
+    }
+
+    $verOutput = & python --version 2>&1
+    if ($verOutput -notmatch "Python (\d+)\.(\d+)") {
+        Write-Host "[github-ops ERROR] Unable to determine Python version: $verOutput" -ForegroundColor Red
+        exit 1
+    }
+    $major = [int]$matches[1]
+    $minor = [int]$matches[2]
+    if ($major -lt 3 -or ($major -eq 3 -and $minor -lt 8)) {
+        Write-Host "[github-ops ERROR] Python $major.$minor is too old. Python 3.8+ required." -ForegroundColor Red
+        exit 1
+    }
+
     $pyArgs = @($Endpoint)
     if ($Method -ne "GET") { $pyArgs += @("-X", $Method) }
     if ($Data) { $pyArgs += @("-d", $Data) }
@@ -34,12 +57,6 @@ function Invoke-GitHubApi {
 
     try {
         & python $ApiScript @pyArgs
-    } catch [System.Management.Automation.CommandNotFoundException] {
-        Write-Host "[github-ops ERROR] Python interpreter not found." -ForegroundColor Red
-        Write-Host "  Command: python $ApiScript" -ForegroundColor Yellow
-        Write-Host "  This skill requires Python 3.8+ on Windows." -ForegroundColor Yellow
-        Write-Host "  Install: winget install Python.Python.3" -ForegroundColor Cyan
-        exit 127
     } catch {
         Write-Host "[github-ops ERROR] $_" -ForegroundColor Red
         exit 1
