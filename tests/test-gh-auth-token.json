@@ -1,0 +1,63 @@
+{
+  "task_id": "test-gh-auth-token-ssh-windows",
+  "title": "测试 gh auth token 在 Windows SSH 远程 PowerShell 中的行为",
+  "priority": "high",
+  "context": {
+    "background": "在 _common.ps1 中新增了 Get-GitHubToken 函数，用于在 PowerShell 层预检 GitHub 认证。该函数首先尝试调用 gh auth token 获取 token。",
+    "discovery_process": [
+      "1. 通过 SSH (yang@10.0.0.210:22) 远程执行测试，Get-GitHubToken 报错 'No GitHub token found'",
+      "2. 排查发现 gh 不在全局 PATH，实际路径为 C:\\Program Files\\GitHub CLI\\gh.exe",
+      "3. 修复 _common.ps1，增加对常见安装路径的探测（ProgramFiles、ProgramFiles(x86)、LOCALAPPDATA）",
+      "4. 再次测试仍失败，直接执行 gh.exe auth token 返回 'no oauth token found for github.com'",
+      "5. 但用户在本地交互式 PowerShell 执行 gh auth token 能正常返回 token（gho_xxx）",
+      "6. 调试发现 SSH 会话中 gh auth status 显示 'The token in default is invalid'",
+      "7. 根因判定：Windows DPAPI（Data Protection API）加密保护机制。gh 存储的 token 被 DPAPI 加密，只能在本地交互式登录会话中解密。SSH 远程会话属于网络登录（Network Logon），无法解锁 DPAPI 主密钥。"
+    ],
+    "root_cause": "Windows DPAPI 凭证保护。gh CLI 在 Windows 上使用 DPAPI 或 Windows Credential Manager 加密存储 token。SSH 远程 PowerShell 会话（网络登录）无法访问这些受保护数据。"
+  },
+  "test_target": "仅测试 gh auth token 命令本身在两种环境下的行为差异",
+  "do_not_test": [
+    "不要测试 Invoke-GitHubApi 完整流程",
+    "不要测试其他脚本（gh-user.ps1、gh-repo.ps1 等）",
+    "不要测试 Python 后端",
+    "不要测试 token 文件回退逻辑",
+    "不要测试环境变量回退逻辑"
+  ],
+  "test_steps": [
+    {
+      "step": 1,
+      "environment": "本地交互式 PowerShell（直接在 Windows 上打开）",
+      "command": "gh auth token",
+      "expected_result": "成功返回 token（ghp_xxx 或 gho_xxx 格式）"
+    },
+    {
+      "step": 2,
+      "environment": "SSH 远程 PowerShell（从 Linux SSH 到 Windows）",
+      "command": "& 'C:\\Program Files\\GitHub CLI\\gh.exe' auth token",
+      "expected_result": "返回 'no oauth token found for github.com' 或类似失败信息"
+    },
+    {
+      "step": 3,
+      "environment": "SSH 远程 PowerShell",
+      "command": "& 'C:\\Program Files\\GitHub CLI\\gh.exe' auth status",
+      "expected_result": "显示 'The token in default is invalid' 或凭证相关错误"
+    },
+    {
+      "step": 4,
+      "environment": "SSH 远程 PowerShell",
+      "command": "whoami; $env:USERNAME; $env:USERPROFILE; $env:LOCALAPPDATA",
+      "expected_result": "确认用户上下文为 yang，路径指向 C:\\Users\\yang"
+    }
+  ],
+  "success_criteria": [
+    "确认本地交互式 PowerShell 能拿到 token",
+    "确认 SSH 远程 PowerShell 拿不到 token（不是找不到 gh.exe，而是 DPAPI 保护导致）",
+    "确认 gh auth status 在 SSH 环境下报 invalid/token 错误",
+    "排除用户名/路径错误的可能性"
+  ],
+  "notes": [
+    "这是 Windows 安全设计，不是 gh CLI 的 bug，也不是 _common.ps1 的 bug",
+    "SSH 会话中应使用 GITHUB_TOKEN 环境变量或 token 文件作为替代方案",
+    "_common.ps1 的路径探测逻辑（探测 ProgramFiles 等常见路径）已验证正确"
+  ]
+}
