@@ -1,12 +1,14 @@
 #!/usr/bin/env pwsh
 # Windows entrypoint for gh-repo — delegates to ../gh-api.py (Python).
 
-. $PSScriptRoot\_common.ps1
-
 param(
     [Parameter(Mandatory, Position = 0)][string]$Repo,
-    [Parameter(Position = 1)][string]$Action = "view"
+    [Parameter(Position = 1)]
+    [ValidateSet("view", "issues", "prs", "commits", "releases", "url")]
+    [string]$Action = "view"
 )
+
+. $PSScriptRoot\_common.ps1
 
 switch ($Action) {
     "view" { Invoke-GitHubApi "repos/$Repo" }
