@@ -1,21 +1,22 @@
 #!/usr/bin/env pwsh
+# Windows entrypoint for gh-issue — delegates to ../gh-api.py (Python).
+# No HTTP, no JSON parsing, no pagination logic in PowerShell.
+
+. $PSScriptRoot\_common.ps1
+
 param(
-    [Parameter(Mandatory=$true, Position=0)]
-    [string]$Repo,
-    [Parameter(Position=1)]
-    [string]$Command = "list"
+    [Parameter(Mandatory, Position = 0)][string]$Repo,
+    [Parameter(Position = 1)][string]$Command = "list"
 )
-$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$Api = "$ScriptDir\gh-api.ps1"
 
 $Remaining = $args
 
 switch ($Command) {
-    "list" { & $Api "repos/$Repo/issues" -Paginate }
+    "list" { Invoke-GitHubApi "repos/$Repo/issues" -Paginate }
     "view" {
         $num = $Remaining[0]
         if (-not $num) { Write-Error "Usage: gh-issue.ps1 <owner/repo> view <number>"; exit 1 }
-        & $Api "repos/$Repo/issues/$num"
+        Invoke-GitHubApi "repos/$Repo/issues/$num"
     }
     "create" {
         $title = $Remaining[0]
@@ -28,30 +29,29 @@ switch ($Command) {
                 $bf = $Remaining[$i+1]
                 if (-not (Test-Path $bf)) { Write-Error "Body file not found: $bf"; exit 1 }
                 $body = Get-Content $bf -Raw -ErrorAction Stop; $i++
-            } else {
-                Write-Error "Unknown argument: $($Remaining[$i])"; exit 1
             }
         }
         $payload = @{ title = $title }
         if ($body) { $payload.body = $body }
-        & $Api "repos/$Repo/issues" "POST" ($payload | ConvertTo-Json -Depth 10)
+        $json = $payload | ConvertTo-Json -Compress -Depth 10
+        Invoke-GitHubApi "repos/$Repo/issues" -Method POST -Data $json
     }
     "close" {
         $num = $Remaining[0]
         if (-not $num) { Write-Error "Usage: gh-issue.ps1 <owner/repo> close <number>"; exit 1 }
-        & $Api "repos/$Repo/issues/$num" "PATCH" '{"state":"closed"}'
+        Invoke-GitHubApi "repos/$Repo/issues/$num" -Method PATCH -Data '{"state":"closed"}'
     }
     "reopen" {
         $num = $Remaining[0]
         if (-not $num) { Write-Error "Usage: gh-issue.ps1 <owner/repo> reopen <number>"; exit 1 }
-        & $Api "repos/$Repo/issues/$num" "PATCH" '{"state":"open"}'
+        Invoke-GitHubApi "repos/$Repo/issues/$num" -Method PATCH -Data '{"state":"open"}'
     }
     "comment" {
         $num = $Remaining[0]
         $body = $Remaining[1]
         if (-not $num -or -not $body) { Write-Error "Usage: gh-issue.ps1 <owner/repo> comment <number> <body>"; exit 1 }
-        $payload = @{ body = $body } | ConvertTo-Json -Depth 10 -Compress
-        & $Api "repos/$Repo/issues/$num/comments" -Method "POST" -Data $payload
+        $json = @{ body = $body } | ConvertTo-Json -Compress -Depth 10
+        Invoke-GitHubApi "repos/$Repo/issues/$num/comments" -Method POST -Data $json
     }
     default {
         Write-Error "Unknown command: $Command"
