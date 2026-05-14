@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- **Windows PowerShell port** (`scripts/windows/`):
+  - `gh-api.ps1` — pure PowerShell API wrapper using `Invoke-RestMethod`, no Python required
+  - `gh-user.ps1` / `gh-repo.ps1` / `gh-issue.ps1` / `gh-pr.ps1` — PowerShell equivalents of core Bash scripts
+  - Auth fallback chain: `gh auth token` → `GITHUB_TOKEN`/`GH_TOKEN` env → `~/.github_token` file → `~/.config/github-ops/token` → `~/github_token.txt`
+- Token file fallback in `scripts/gh-api.py` for lab/revert environments (`~/.github_token`, `~/.config/github-ops/token`, etc.)
+- Platform split: `scripts/linux/` (Bash+Python) and `scripts/windows/` (PowerShell)
+
+### Changed
+- README updated with platform-specific quick start examples
+
 ### Fixed
 - `gh-pr-review.sh`: handle `null` `pull_request_review_id` and `user` fields from GitHub API
 - `gh-pr-reviews.sh`: handle `null` `user` field from GitHub API

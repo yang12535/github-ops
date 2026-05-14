@@ -1,0 +1,9 @@
+# Linux/macOS scripts must use LF
+scripts/linux/* text eol=lf
+
+# Windows PowerShell scripts use CRLF
+scripts/windows/* text eol=crlf
+
+# Legacy root scripts (backward compat)
+scripts/*.sh text eol=lf
+scripts/*.py text eol=lf
