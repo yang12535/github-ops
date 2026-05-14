@@ -5,7 +5,7 @@ description: "GitHub repository and workflow operations via authenticated REST A
 
 # GitHub Operations
 
-**Primary method**: Direct GitHub REST API calls via `scripts/gh-api.py` (Python/urllib) or raw `curl`. On Windows, pure PowerShell via `Invoke-RestMethod`.
+**Primary method**: Direct GitHub REST API calls via `scripts/gh-api.py` (Python/urllib) or raw `curl`. On Windows, PowerShell thin wrappers that delegate to `scripts/gh-api.py` (requires Python 3.8+).
 **Quick scripts**: `scripts/linux/gh-*.sh` (Linux/macOS), `scripts/windows/gh-*.ps1` (Windows), and legacy `scripts/gh-*.sh`.
 **Auth source**: `gh auth token` (preferred) → `GITHUB_TOKEN` / `GH_TOKEN` env → `~/.github_token` / `~/.config/github-ops/token` / `~/github_token.txt`. Re-authenticate with `gh auth login` only when token is missing.
 
