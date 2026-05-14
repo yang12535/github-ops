@@ -1,12 +1,14 @@
 #!/usr/bin/env pwsh
 # Windows entrypoint for gh-pr — delegates to ../gh-api.py (Python).
 
-. $PSScriptRoot\_common.ps1
-
 param(
     [Parameter(Mandatory, Position = 0)][string]$Repo,
-    [Parameter(Position = 1)][string]$Command = "list"
+    [Parameter(Position = 1)]
+    [ValidateSet("list", "view", "create", "comments", "merge", "comment")]
+    [string]$Command = "list"
 )
+
+. $PSScriptRoot\_common.ps1
 
 $Remaining = $args
 
