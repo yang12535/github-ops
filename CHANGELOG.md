@@ -1,46 +1,46 @@
-# Changelog
+# 更新日志
 
-All notable changes to this project will be documented in this file.
+本项目的所有重要变更均记录于此。
 
-## [Unreleased]
+## [未发布]
 
-### Added
-- **Windows PowerShell port** (`scripts/windows/`):
-  - `scripts/windows/*.ps1` — thin PowerShell wrappers that delegate to `scripts/gh-api.py` (Python backend); requires Python 3.8+
-  - `_common.ps1` — shared helper for building arguments and invoking the Python backend
-  - `gh-user.ps1` / `gh-repo.ps1` / `gh-issue.ps1` / `gh-pr.ps1` — PowerShell equivalents of core Bash scripts
-  - Auth fallback chain: `gh auth token` → `GITHUB_TOKEN`/`GH_TOKEN` env → `~/.github_token` file → `~/.config/github-ops/token` → `~/github_token.txt`
-- Token file fallback in `scripts/gh-api.py` for lab/revert environments (`~/.github_token`, `~/.config/github-ops/token`, etc.)
-- Platform split: `scripts/linux/` (Bash+Python) and `scripts/windows/` (PowerShell)
+### 新增
+- **Windows PowerShell 移植版**（`scripts/windows/`）：
+  - `scripts/windows/*.ps1` — 薄 PowerShell 包装层，委托给 `scripts/gh-api.py`（Python 后端）；需要 Python 3.8+
+  - `_common.ps1` — 共享辅助函数，负责构建参数并调用 Python 后端
+  - `gh-user.ps1` / `gh-repo.ps1` / `gh-issue.ps1` / `gh-pr.ps1` — 核心 Bash 脚本的 PowerShell 等价物
+  - 认证回退链：`gh auth token` → `GITHUB_TOKEN`/`GH_TOKEN` 环境变量 → `~/.github_token` 文件 → `~/.config/github-ops/token` → `~/github_token.txt`
+- `scripts/gh-api.py` 增加 token 文件回退，用于实验室/回滚环境（`~/.github_token`、`~/.config/github-ops/token` 等）
+- 平台拆分：`scripts/linux/`（Bash+Python）和 `scripts/windows/`（PowerShell）
 
-### Changed
-- README updated with platform-specific quick start examples
+### 变更
+- README 已更新，增加各平台快速上手指南
 
-### Fixed
-- `gh-pr-review.sh`: handle `null` `pull_request_review_id` and `user` fields from GitHub API
-- `gh-pr-reviews.sh`: handle `null` `user` field from GitHub API
+### 修复
+- `gh-pr-review.sh`：处理 GitHub API 返回的 `null` 类型 `pull_request_review_id` 和 `user` 字段
+- `gh-pr-reviews.sh`：处理 GitHub API 返回的 `null` 类型 `user` 字段
 
 ## [1.0.0] - 2026-05-13
 
-### Added
-- Core API wrapper `scripts/gh-api.py` (Python/urllib, no heavy SDK required)
-- Bash quick scripts for common GitHub workflows:
-  - `gh-user.sh` — user profile lookup
-  - `gh-repo.sh` — repository info, issues, PRs, commits, releases, contents
-  - `gh-issue.sh` — issue list/view/create/close/reopen/comment
-  - `gh-pr.sh` — PR list/view/create/comments/merge/comment
-  - `gh-comment.sh` / `gh-comment.py` — quick comment on issues/PRs
-  - `gh-activity.sh` / `gh-activity.py` — user activity feed
-  - `gh-notify.sh` — notifications list/read
-  - `gh-push.sh` / `gh-pull.sh` — git sync helpers
-  - `gh-api-call.sh` — generic API endpoint access
-  - `gh-push-check.py` — pre-push remote status check
-- PR review helpers:
-  - `gh-pr-review.sh` — view PR review comments grouped by review round
-  - `gh-pr-reviews.sh` — summary of all review rounds
-  - `gh-pr-reply.sh` — reply to specific review comments
-- Full command reference in `SKILL.md`
+### 新增
+- 核心 API 包装层 `scripts/gh-api.py`（Python/urllib，无需重型 SDK）
+- Bash 快捷脚本，覆盖常见 GitHub 工作流：
+  - `gh-user.sh` — 用户资料查询
+  - `gh-repo.sh` — 仓库信息、议题、PR、提交记录、发行版、目录内容
+  - `gh-issue.sh` — 议题的列出/查看/创建/关闭/重开/评论
+  - `gh-pr.sh` — PR 的列出/查看/创建/评论/合并/评论
+  - `gh-comment.sh` / `gh-comment.py` — 在议题/PR 上快速评论
+  - `gh-activity.sh` / `gh-activity.py` — 用户活动流
+  - `gh-notify.sh` — 通知的列出/标为已读
+  - `gh-push.sh` / `gh-pull.sh` — Git 同步辅助
+  - `gh-api-call.sh` — 通用 API 端点访问
+  - `gh-push-check.py` — 推送前远程状态检查
+- PR Review 辅助工具：
+  - `gh-pr-review.sh` — 按 review 轮次分组查看 review 评论
+  - `gh-pr-reviews.sh` — 所有 review 轮次的摘要
+  - `gh-pr-reply.sh` — 回复指定 review 评论
+- 完整命令参考见 `SKILL.md`
 
-### Changed
-- `gh-issue.sh` and `gh-pr.sh` `create` commands support `--body` and `--body-file` flags
-- `gh-comment.sh` supports `--body` and `--body-file` flags
+### 变更
+- `gh-issue.sh` 与 `gh-pr.sh` 的 `create` 命令支持 `--body` 和 `--body-file` 参数
+- `gh-comment.sh` 支持 `--body` 和 `--body-file` 参数

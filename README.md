@@ -1,73 +1,73 @@
-# GitHub Operations
+# GitHub 运维工具集
 
-A collection of lightweight scripts for interacting with the GitHub REST API.
+一组轻量级的脚本，用于调用 GitHub REST API。
 
-Now split by platform — because **Windows is not Unix**.
+现已按平台拆分 —— 因为 **Windows 不是 Unix**。
 
-## About
+## 简介
 
-**Author:** [yang12535](https://github.com/yang12535)
+**作者：** [yang12535](https://github.com/yang12535)
 
-This project provides a minimal, dependency-light toolkit for common GitHub workflows:
+本项目提供了一套依赖极简的工具集，覆盖日常 GitHub 工作流：
 
-- **Direct API calls** via Python (`urllib`) or `curl` — no heavy SDK required.
-- **Authentication** via `gh auth token` (preferred) or `GITHUB_TOKEN` / `GH_TOKEN` environment variables.
-- **Quick scripts** for everyday tasks: viewing repos, issues, PRs, comments, activity feeds, notifications, and git sync helpers.
+- **直接调用 API**：通过 Python（`urllib`）或 `curl`，无需笨重的 SDK。
+- **认证方式**：优先使用 `gh auth token`，也可通过 `GITHUB_TOKEN` / `GH_TOKEN` 环境变量回退。
+- **快捷脚本**：查看仓库、议题、PR、评论、活动流、通知，以及 Git 同步辅助。
 
-All scripts are designed to be readable, composable, and easy to extend.
+所有脚本力求可读、可组合、易扩展。
 
-## Platform Split
+## 平台划分
 
-| Platform | Directory | Runtime | Notes |
+| 平台 | 目录 | 运行环境 | 说明 |
 |---|---|---|---|
-| **Linux / macOS** | `scripts/linux/` | Bash + Python 3 | Original stack, `python3` required |
-| **Windows** | `scripts/windows/` | PowerShell 7+ | Thin wrappers → `scripts/gh-api.py`, requires Python 3.8+ |
-| **Legacy (generic)** | `scripts/` | Bash + Python 3 | Kept for backward compatibility |
+| **Linux / macOS** | `scripts/linux/` | Bash + Python 3 | 原版技术栈，需要 `python3` |
+| **Windows** | `scripts/windows/` | PowerShell 7+ | 薄包装层 → `scripts/gh-api.py`，需要 Python 3.8+ |
+| **旧版（通用）** | `scripts/` | Bash + Python 3 | 保留向后兼容 |
 
-> **Why split?** Windows lab environments often have non-standard Python installs (`D:\python313\python`) and `gh` CLI spits GraphQL deprecation noise. The PowerShell wrappers handle Windows paths natively, then delegate all HTTP/JSON/pagination logic to the shared Python backend (`scripts/gh-api.py`). Python 3.8+ is required on all platforms.
+> **为什么要拆分？** Windows 实验环境的 Python 安装路径往往不标准（比如 `D:\python313\python`），而且 `gh` CLI 经常输出 GraphQL 弃用警告。PowerShell 包装层原生处理 Windows 路径，然后把所有 HTTP/JSON/分页逻辑委托给共享的 Python 后端（`scripts/gh-api.py`）。所有平台均需要 Python 3.8+。
 
-## Quick Start
+## 快速开始
 
 ### Linux / macOS
 
 ```bash
-# User profile
+# 用户资料
 scripts/linux/gh-user.sh
 
-# Repository info
+# 仓库信息
 scripts/linux/gh-repo.sh owner/repo view
 
-# List open issues
+# 列出开放议题
 scripts/linux/gh-issue.sh owner/repo list
 ```
 
-### Windows (PowerShell)
+### Windows（PowerShell）
 
 ```powershell
-# User profile
+# 用户资料
 scripts/windows/gh-user.ps1
 
-# Repository info
+# 仓库信息
 scripts/windows/gh-repo.ps1 owner/repo view
 
-# List open PRs
+# 列出开放 PR
 scripts/windows/gh-pr.ps1 owner/repo list
 
-# Create PR
-scripts/windows/gh-pr.ps1 owner/repo create "title" "head-branch" "main" --body "PR description"
+# 创建 PR
+scripts/windows/gh-pr.ps1 owner/repo create "标题" "head-branch" "main" --body "PR 描述"
 ```
 
-See `SKILL.md` for the full command reference and advanced usage patterns.
+完整命令参考与高级用法请见 `SKILL.md`。
 
-## License
+## 许可证
 
-This work is licensed under the [Creative Commons Attribution 4.0 International License](LICENSE).
+本作品采用 [Creative Commons Attribution 4.0 International License](LICENSE) 授权。
 
-You are free to:
+您可以：
 
-- **Share** — copy and redistribute the material in any medium or format
-- **Adapt** — remix, transform, and build upon the material for any purpose, even commercially
+- **共享** — 以任何媒介或格式复制、 redistribute 本材料
+- **改编** — 再混音、转换、基于本材料进行创作，包括商业用途
 
-Under the following terms:
+需遵守以下条款：
 
-- **Attribution** — You must give appropriate credit, provide a link to the license, and indicate if changes were made.
+- **署名** — 您必须给出适当的署名，提供许可证链接，并注明是否做了修改。
