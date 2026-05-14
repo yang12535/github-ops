@@ -1,43 +1,47 @@
 # Common helpers for github-ops Windows wrappers.
 # Design note: This skill is consumed by AI agents. Agents are expected to
-# resolve environment dependencies (e.g. install Python) when they see a
-# clear, actionable error message. Do NOT add fallback logic that hides
-# the root cause from the agent.
+# resolve environment dependencies when they see a clear, actionable error.
+# No probing, no fallback — hard errors with instructions.
 
 $ErrorActionPreference = "Stop"
 
-function Invoke-PythonBackend {
+function Invoke-GitHubApi {
     param(
-        [Parameter(Mandatory)][string]$BackendName,
-        [Parameter(Mandatory)][string[]]$PassArgs
+        [Parameter(Mandatory)][string]$Endpoint,
+        [string]$Method = "GET",
+        [string]$Data,
+        [switch]$Paginate,
+        [switch]$Compact,
+        [string[]]$Field
     )
 
     $WindowsDir = Split-Path -Parent $PSCommandPath
     $ScriptsDir = Split-Path -Parent $WindowsDir
-    $PyScript   = Join-Path $ScriptsDir $BackendName
+    $ApiScript  = Join-Path $ScriptsDir "gh-api.py"
 
-    if (-not (Test-Path $PyScript)) {
-        Write-Host "[github-ops ERROR] Backend script not found: $PyScript" -ForegroundColor Red
+    if (-not (Test-Path $ApiScript)) {
+        Write-Host "[github-ops ERROR] Backend not found: $ApiScript" -ForegroundColor Red
         Write-Host "Repository may be incomplete or corrupted." -ForegroundColor Yellow
         exit 1
     }
 
-    # Direct invocation — no probing, no fallback.
-    # If python/py is missing, the agent sees the raw exception and acts.
+    $pyArgs = @($Endpoint)
+    if ($Method -ne "GET") { $pyArgs += @("-X", $Method) }
+    if ($Data) { $pyArgs += @("-d", $Data) }
+    if ($Paginate) { $pyArgs += "-p" }
+    if ($Compact) { $pyArgs += "-c" }
+    if ($Field) { foreach ($f in $Field) { $pyArgs += @("-f", $f) } }
+
     try {
-        & python $PyScript @PassArgs
+        & python $ApiScript @pyArgs
     } catch [System.Management.Automation.CommandNotFoundException] {
         Write-Host "[github-ops ERROR] Python interpreter not found." -ForegroundColor Red
-        Write-Host "  Command attempted: python $PyScript" -ForegroundColor Yellow
+        Write-Host "  Command: python $ApiScript" -ForegroundColor Yellow
         Write-Host "  This skill requires Python 3.8+ on Windows." -ForegroundColor Yellow
-        Write-Host "  Resolution options:" -ForegroundColor Yellow
-        Write-Host "    1. Install Python:  winget install Python.Python.3" -ForegroundColor Cyan
-        Write-Host "    2. Or download from: https://python.org/downloads/" -ForegroundColor Cyan
-        Write-Host "    3. Ensure 'python' is available in PATH after install." -ForegroundColor Cyan
+        Write-Host "  Install: winget install Python.Python.3" -ForegroundColor Cyan
         exit 127
     } catch {
-        Write-Host "[github-ops ERROR] Unexpected failure invoking Python backend." -ForegroundColor Red
-        Write-Host "  Exception: $_" -ForegroundColor Yellow
+        Write-Host "[github-ops ERROR] $_" -ForegroundColor Red
         exit 1
     }
 
