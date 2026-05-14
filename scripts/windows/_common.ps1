@@ -26,7 +26,8 @@ function Invoke-GitHubApi {
     }
 
     # Pre-flight: verify Python exists and meets version requirement.
-    # This avoids the Microsoft Store shim trap (python.exe on PATH with no real install).
+    # Note: Get-Command may still find the Microsoft Store shim on PATH.
+    # The actual shim rejection happens in the version-regex check below.
     $pythonCmd = Get-Command python -ErrorAction SilentlyContinue
     if (-not $pythonCmd) {
         Write-Host "[github-ops ERROR] Python interpreter not found." -ForegroundColor Red
