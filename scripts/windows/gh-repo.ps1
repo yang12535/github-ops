@@ -4,7 +4,7 @@
 param(
     [Parameter(Mandatory, Position = 0)][string]$Repo,
     [Parameter(Position = 1)]
-    [ValidateSet("view", "issues", "prs", "commits", "releases", "url")]
+    [ValidateSet("view", "issues", "prs", "commits", "releases", "contents", "url")]
     [string]$Action = "view"
 )
 
