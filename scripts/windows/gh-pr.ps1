@@ -26,12 +26,16 @@ switch ($Command) {
         $base = $Remaining[2]
         $body = ""
         for ($i = 3; $i -lt $Remaining.Count; $i++) {
-            if ($Remaining[$i] -eq "--body" -and ($i+1) -lt $Remaining.Count) {
+            if ($Remaining[$i] -eq "--body") {
+                if (($i+1) -ge $Remaining.Count) { Write-Error "Usage: --body requires a value"; exit 1 }
                 $body = $Remaining[$i+1]; $i++
-            } elseif ($Remaining[$i] -eq "--body-file" -and ($i+1) -lt $Remaining.Count) {
+            } elseif ($Remaining[$i] -eq "--body-file") {
+                if (($i+1) -ge $Remaining.Count) { Write-Error "Usage: --body-file requires a path"; exit 1 }
                 $bf = $Remaining[$i+1]
                 if (-not (Test-Path $bf)) { Write-Error "Body file not found: $bf"; exit 1 }
                 $body = Get-Content $bf -Raw -ErrorAction Stop; $i++
+            } else {
+                Write-Error "Unknown option: $($Remaining[$i])"; exit 1
             }
         }
         $payload = @{ title = $title; head = $head; base = $base }
@@ -48,10 +52,12 @@ switch ($Command) {
         $num = $Remaining[0]
         $method = $Remaining[1]
         if (-not $num) { Write-Error "Usage: gh-pr.ps1 <owner/repo> merge <number> [merge|squash|rebase]"; exit 1 }
-        $payload = @{}
-        if ($method) { $payload.merge_method = $method }
-        $json = $payload | ConvertTo-Json -Compress -Depth 10
-        Invoke-GitHubApi "repos/$Repo/pulls/$num/merge" -Method PUT -Data $json
+        if ($method) {
+            $json = @{ merge_method = $method } | ConvertTo-Json -Compress -Depth 10
+            Invoke-GitHubApi "repos/$Repo/pulls/$num/merge" -Method PUT -Data $json
+        } else {
+            Invoke-GitHubApi "repos/$Repo/pulls/$num/merge" -Method PUT
+        }
     }
     "comment" {
         $num = $Remaining[0]
