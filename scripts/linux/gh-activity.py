@@ -3,6 +3,7 @@
 
 import json
 import os
+import stat
 import subprocess
 import sys
 import urllib.error
@@ -21,7 +22,6 @@ def get_token():
     if token:
         return token
     # Fallback token files (lab/revert environments)
-    import os, stat
     fallback_paths = [
         os.path.expanduser("~/.github_token"),
         os.path.expanduser("~/.config/github-ops/token"),
