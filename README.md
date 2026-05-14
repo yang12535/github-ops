@@ -21,10 +21,10 @@ All scripts are designed to be readable, composable, and easy to extend.
 | Platform | Directory | Runtime | Notes |
 |---|---|---|---|
 | **Linux / macOS** | `scripts/linux/` | Bash + Python 3 | Original stack, `python3` required |
-| **Windows** | `scripts/windows/` | PowerShell 7+ | Pure PowerShell, **no Python required** |
+| **Windows** | `scripts/windows/` | PowerShell 7+ | Thin wrappers → `scripts/gh-api.py`, requires Python 3.8+ |
 | **Legacy (generic)** | `scripts/` | Bash + Python 3 | Kept for backward compatibility |
 
-> **Why split?** Windows lab environments often lack `python3` in PATH, have non-standard Python installs (`D:\python313\python`), and `gh` CLI spits GraphQL deprecation noise. The PowerShell version uses `Invoke-RestMethod` natively, reads token from fallback files, and handles Windows paths out of the box.
+> **Why split?** Windows lab environments often have non-standard Python installs (`D:\python313\python`) and `gh` CLI spits GraphQL deprecation noise. The PowerShell wrappers handle Windows paths natively, then delegate all HTTP/JSON/pagination logic to the shared Python backend (`scripts/gh-api.py`). Python 3.8+ is required on all platforms.
 
 ## Quick Start
 
