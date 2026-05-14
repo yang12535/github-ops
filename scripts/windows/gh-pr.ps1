@@ -1,79 +1,62 @@
 #!/usr/bin/env pwsh
-<#
-.SYNOPSIS
-    Quick PR operations for Windows (PowerShell).
-.DESCRIPTION
-    Uses gh-api.ps1 internally. No Python required.
-#>
+# Windows entrypoint for gh-pr — delegates to ../gh-api.py (Python).
+
+. $PSScriptRoot\_common.ps1
 
 param(
-    [Parameter(Mandatory=$true, Position=0)]
-    [string]$Repo,
-
-    [Parameter(Position=1)]
-    [string]$Command = "list",
-
-    [Parameter(ValueFromRemainingArguments=$true)]
-    [string[]]$Args
+    [Parameter(Mandatory, Position = 0)][string]$Repo,
+    [Parameter(Position = 1)][string]$Command = "list"
 )
 
-$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$Api = "$ScriptDir\gh-api.ps1"
-
-function Invoke-Api { param($Endpoint, $Method="GET", $Body=$null)
-    $params = @{ Endpoint = $Endpoint; Method = $Method }
-    if ($Body) { $params.Data = ($Body | ConvertTo-Json -Depth 10) }
-    & $Api @params
-}
+$Remaining = $args
 
 switch ($Command) {
-    "list" {
-        & $Api "repos/$Repo/pulls" -Paginate
-    }
+    "list" { Invoke-GitHubApi "repos/$Repo/pulls" -Paginate }
     "view" {
-        $num = $Args[0]
+        $num = $Remaining[0]
         if (-not $num) { Write-Error "Usage: gh-pr.ps1 <owner/repo> view <number>"; exit 1 }
-        & $Api "repos/$Repo/pulls/$num"
+        Invoke-GitHubApi "repos/$Repo/pulls/$num"
     }
     "create" {
-        if ($Args.Count -lt 3) { Write-Error "Usage: gh-pr.ps1 <owner/repo> create <title> <head> <base> [--body <text>|--body-file <path>]"; exit 1 }
-        $title = $Args[0]
-        $head = $Args[1]
-        $base = $Args[2]
+        if ($Remaining.Count -lt 3) { Write-Error "Usage: gh-pr.ps1 <owner/repo> create <title> <head> <base> [--body <text>|--body-file <path>]"; exit 1 }
+        $title = $Remaining[0]
+        $head = $Remaining[1]
+        $base = $Remaining[2]
         $body = ""
-        for ($i = 3; $i -lt $Args.Count; $i++) {
-            if ($Args[$i] -eq "--body" -and ($i+1) -lt $Args.Count) {
-                $body = $Args[$i+1]; $i++
-            } elseif ($Args[$i] -eq "--body-file" -and ($i+1) -lt $Args.Count) {
-                $bf = $Args[$i+1]
+        for ($i = 3; $i -lt $Remaining.Count; $i++) {
+            if ($Remaining[$i] -eq "--body" -and ($i+1) -lt $Remaining.Count) {
+                $body = $Remaining[$i+1]; $i++
+            } elseif ($Remaining[$i] -eq "--body-file" -and ($i+1) -lt $Remaining.Count) {
+                $bf = $Remaining[$i+1]
                 if (-not (Test-Path $bf)) { Write-Error "Body file not found: $bf"; exit 1 }
                 $body = Get-Content $bf -Raw -ErrorAction Stop; $i++
-            } else {
-                Write-Error "Unknown argument: $($Args[$i])"; exit 1
             }
         }
         $payload = @{ title = $title; head = $head; base = $base }
         if ($body) { $payload.body = $body }
-        Invoke-Api "repos/$Repo/pulls" "POST" $payload
+        $json = $payload | ConvertTo-Json -Compress -Depth 10
+        Invoke-GitHubApi "repos/$Repo/pulls" -Method POST -Data $json
     }
     "comments" {
-        $num = $Args[0]
+        $num = $Remaining[0]
         if (-not $num) { Write-Error "Usage: gh-pr.ps1 <owner/repo> comments <number>"; exit 1 }
-        & $Api "repos/$Repo/issues/$num/comments" -Paginate
+        Invoke-GitHubApi "repos/$Repo/issues/$num/comments" -Paginate
     }
     "merge" {
-        $num = $Args[0]
-        $method = $Args[1]
+        $num = $Remaining[0]
+        $method = $Remaining[1]
         if (-not $num) { Write-Error "Usage: gh-pr.ps1 <owner/repo> merge <number> [merge|squash|rebase]"; exit 1 }
         $payload = @{}
         if ($method) { $payload.merge_method = $method }
-        Invoke-Api "repos/$Repo/pulls/$num/merge" "PUT" $payload
+        $json = $payload | ConvertTo-Json -Compress -Depth 10
+        Invoke-GitHubApi "repos/$Repo/pulls/$num/merge" -Method PUT -Data $json
     }
     "comment" {
-        $num = $Args[0]
-        $body = $Args[1]
+        $num = $Remaining[0]
+        $body = $Remaining[1]
         if (-not $num -or -not $body) { Write-Error "Usage: gh-pr.ps1 <owner/repo> comment <number> <body>"; exit 1 }
-        Invoke-Api "repos/$Repo/issues/$num/comments" "POST" @{ body = $body }
+        $json = @{ body = $body } | ConvertTo-Json -Compress -Depth 10
+        Invoke-GitHubApi "repos/$Repo/issues/$num/comments" -Method POST -Data $json
     }
     default {
         Write-Error "Unknown command: $Command"
