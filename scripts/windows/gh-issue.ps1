@@ -1,13 +1,14 @@
 #!/usr/bin/env pwsh
 # Windows entrypoint for gh-issue — delegates to ../gh-api.py (Python).
-# No HTTP, no JSON parsing, no pagination logic in PowerShell.
-
-. $PSScriptRoot\_common.ps1
 
 param(
     [Parameter(Mandatory, Position = 0)][string]$Repo,
-    [Parameter(Position = 1)][string]$Command = "list"
+    [Parameter(Position = 1)]
+    [ValidateSet("list", "view", "create", "close", "reopen", "comment")]
+    [string]$Command = "list"
 )
+
+. $PSScriptRoot\_common.ps1
 
 $Remaining = $args
 
