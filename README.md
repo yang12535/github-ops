@@ -25,7 +25,7 @@
 > 💡 **注意**：下文推荐用 `gh auth login` 获取 token，但 `gh` CLI 本身是**可选的**。不安装时，可用环境变量或 token 文件完成认证。
 
 **设计哲学**：
-- **薄包装层** — Bash/PowerShell 只做参数解析，HTTP/JSON/分页逻辑全部委托给共享 Python 后端
+- **薄包装层** — Bash/PowerShell 只做参数解析，HTTP/JSON/分页逻辑优先委托给共享 Python 后端（`gh-api-call.sh` 在缺少 Python 时回退到 `curl`）
 - **失败即指令** — 遇到缺失依赖时，输出清晰的修复指令，不猜测、不静默失败
 - **AI 原生** — 完整的 `SKILL.md` 供 AI Agent 直接消费
 
@@ -34,6 +34,8 @@
 ## ✨ 功能特性
 
 ### 核心脚本功能矩阵（12 个用户入口）
+
+> 表格中的脚本名为逻辑命令名，实际按平台对应到 `scripts/linux/*.sh` 或 `scripts/windows/*.ps1`
 
 | 脚本 | 功能 | Linux/macOS | Windows |
 |------|------|:-----------:|:-------:|
@@ -57,7 +59,7 @@
 - **🎯 字段过滤** — 支持 `owner.login`、`0.name` 等点号路径提取，减少 JSON 噪音
 - **🔐 安全认证** — Token 文件权限检查（Linux: `S_IRWXG|S_IRWXO` / Windows: ACL）
 - **🔑 多级回退** — `gh auth token` → `GITHUB_TOKEN`/`GH_TOKEN` → `~/.github_token`
-- **🐍 统一后端** — `scripts/gh-api.py` 处理所有 HTTP/JSON/分页逻辑，各平台包装器统一引用（Windows 通过 `../gh-api.py` 引用）
+- **🐍 统一后端** — `gh-api.py` 处理所有 HTTP/JSON/分页逻辑。Linux/macOS 包装器引用同目录副本，`scripts/windows/*.ps1` 引用 `../gh-api.py`
 
 ---
 
@@ -216,8 +218,8 @@ python3 scripts/gh-api.py -X PATCH -d '{"state":"closed"}' \
 
 ### 文件权限检查
 
-- **Linux/macOS**: 拒绝 `group` 或 `others` 有任何权限的 token 文件（读/写/执行均不允许）
-- **Windows**: 拒绝 `Users`/`Everyone`/`Authenticated Users` 可读取的 token 文件
+- **Linux/macOS**（Python 后端 + PowerShell）：拒绝 `group` 或 `others` 有任何权限的 token 文件（读/写/执行均不允许）
+- **Windows**（仅 PowerShell 包装脚本）：拒绝 `Users`/`Everyone`/`Authenticated Users` 可读取的 token 文件。注意：Windows 上直接运行 `python3 scripts/gh-api.py` 不会触发 ACL 检查
 
 ```bash
 # 正确示例
