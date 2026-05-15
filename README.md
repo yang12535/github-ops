@@ -2,7 +2,7 @@
 
 # 🛠️ GitHub Ops
 
-**轻量级 GitHub 运维工具集 — 零依赖、跨平台、AI 友好**
+**轻量级 GitHub 运维工具集 — 少依赖、跨平台、AI 友好**
 
 [![License](https://img.shields.io/badge/License-CC%20BY%204.0-orange.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows-blue.svg)](#-快速开始)
