@@ -15,7 +15,7 @@
 
 ## 📖 简介
 
-一组**零第三方依赖**的脚本工具，通过 GitHub REST API 直接操作仓库、Issue、PR、评论等，覆盖日常 GitHub 工作流。
+一组**仅在能大幅简化代码流程时才引入第三方依赖**的脚本工具，通过 GitHub REST API 直接操作仓库、Issue、PR、评论等，覆盖日常 GitHub 工作流。
 
 **为什么不用 `gh` CLI？**
 - `gh` 在 Windows 上经常输出 GraphQL 弃用警告
