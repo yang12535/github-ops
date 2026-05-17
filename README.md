@@ -4,7 +4,7 @@
 
 **轻量级 GitHub 运维工具集 — 少依赖、跨平台、AI 友好**
 
-[![License](https://img.shields.io/badge/License-CC%20BY%204.0-orange.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-orange.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows-blue.svg)](#-快速开始)
 [![Python](https://img.shields.io/badge/Python-3.8%2B-green.svg)](https://www.python.org/)
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-None-brightgreen.svg)](#技术亮点)
@@ -151,7 +151,7 @@ github-ops/
 ├── SKILL.md                 # 🤖 AI Agent 使用文档
 ├── README.md                # 本文档
 ├── CHANGELOG.md             # 更新日志
-└── LICENSE                  # CC BY 4.0
+└── LICENSE                  # MIT
 ```
 
 ---
@@ -274,7 +274,7 @@ Get-ChildItem scripts/windows -Filter "*.ps1" | ForEach-Object {
 
 ## 📜 License
 
-本作品采用 [Creative Commons Attribution 4.0 International License](LICENSE) 授权。
+本作品采用 [MIT License](LICENSE) 授权。
 
 您可以自由地共享和改编，只需适当署名。
 
