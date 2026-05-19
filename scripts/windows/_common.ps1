@@ -73,27 +73,28 @@ function Invoke-GitHubApi {
     }
 
     # Pre-flight: verify Python exists and meets version requirement.
-    # Note: Get-Command may still find the Microsoft Store shim on PATH.
-    # The actual shim rejection happens in the version-regex check below.
-    $pythonCmd = Get-Command python -ErrorAction SilentlyContinue
-    if (-not $pythonCmd) {
-        Write-Host "[github-ops ERROR] Python interpreter not found." -ForegroundColor Red
-        Write-Host "  This skill requires Python 3.8+ on Windows." -ForegroundColor Yellow
+    # On Windows, prefer 'py' (Python Launcher) over 'python' to avoid
+    # the Microsoft Store shim, then fallback to 'python3' and 'python'.
+    $candidates = @("py", "python3", "python")
+    $script:PythonExe = $null
+    foreach ($c in $candidates) {
+        $cmd = Get-Command $c -ErrorAction SilentlyContinue
+        if (-not $cmd) { continue }
+        $verOutput = & $cmd --version 2>&1
+        if ($verOutput -notmatch "Python (\d+)\.(\d+)") { continue }
+        $major = [int]$matches[1]
+        $minor = [int]$matches[2]
+        if ($major -ge 3 -and $minor -ge 7) {
+            $script:PythonExe = $cmd.Source
+            break
+        }
+    }
+    if (-not $script:PythonExe) {
+        Write-Host "[github-ops ERROR] Python 3.7+ interpreter not found." -ForegroundColor Red
+        Write-Host "  Tried: $($candidates -join ', ')" -ForegroundColor Yellow
         Write-Host "  Install: winget install Python.Python.3" -ForegroundColor Cyan
         Write-Host "  Or download from: https://python.org/downloads/" -ForegroundColor Cyan
         exit 127
-    }
-
-    $verOutput = & python --version 2>&1
-    if ($verOutput -notmatch "Python (\d+)\.(\d+)") {
-        Write-Host "[github-ops ERROR] Unable to determine Python version: $verOutput" -ForegroundColor Red
-        exit 1
-    }
-    $major = [int]$matches[1]
-    $minor = [int]$matches[2]
-    if ($major -lt 3 -or ($major -eq 3 -and $minor -lt 8)) {
-        Write-Host "[github-ops ERROR] Python $major.$minor is too old. Python 3.8+ required." -ForegroundColor Red
-        exit 1
     }
 
     # Pre-flight: resolve GitHub token and inject into environment so Python
@@ -108,6 +109,6 @@ function Invoke-GitHubApi {
     if ($Compact) { $pyArgs += "-c" }
     if ($Field) { foreach ($f in $Field) { $pyArgs += @("-f", $f) } }
 
-    & python $ApiScript @pyArgs
+    & $script:PythonExe $ApiScript @pyArgs
     exit $LASTEXITCODE
 }

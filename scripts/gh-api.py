@@ -12,6 +12,23 @@ import urllib.parse
 import urllib.request
 
 
+def _install_proxy_handler():
+    """Install a proxy handler if HTTP_PROXY or HTTPS_PROXY is set."""
+    proxy = (
+        os.environ.get("HTTPS_PROXY")
+        or os.environ.get("https_proxy")
+        or os.environ.get("HTTP_PROXY")
+        or os.environ.get("http_proxy")
+    )
+    if proxy:
+        handler = urllib.request.ProxyHandler({"https": proxy, "http": proxy})
+        opener = urllib.request.build_opener(handler)
+        urllib.request.install_opener(opener)
+
+
+_install_proxy_handler()
+
+
 def get_token():
     """Get token from gh CLI, environment, or fallback files."""
     try:
