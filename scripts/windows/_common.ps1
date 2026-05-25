@@ -73,25 +73,31 @@ function Invoke-GitHubApi {
     }
 
     # Pre-flight: verify Python exists and meets version requirement.
-    # On Windows, prefer 'py' (Python Launcher) over 'python' to avoid
-    # the Microsoft Store shim, then fallback to 'python3' and 'python'.
-    $candidates = @("py", "python3", "python")
+    # On Windows, use the Python Launcher with an explicit Python 3 selector.
+    # Bare 'py' can be configured to launch Python 2 via py.ini/PY_PYTHON.
+    $candidates = @(
+        [pscustomobject]@{ Command = "py"; Args = @("-3"); Display = "py -3" },
+        [pscustomobject]@{ Command = "python"; Args = @(); Display = "python" }
+    )
     $script:PythonExe = $null
+    $script:PythonArgs = @()
     foreach ($c in $candidates) {
-        $cmd = Get-Command $c -ErrorAction SilentlyContinue
+        $cmd = Get-Command $c.Command -ErrorAction SilentlyContinue
         if (-not $cmd) { continue }
-        $verOutput = & $cmd --version 2>&1
+        $candidateArgs = @($c.Args)
+        $verOutput = & $cmd.Source @candidateArgs --version 2>&1
         if ($verOutput -notmatch "Python (\d+)\.(\d+)") { continue }
         $major = [int]$matches[1]
         $minor = [int]$matches[2]
-        if ($major -ge 3 -and $minor -ge 7) {
+        if ($major -gt 3 -or ($major -eq 3 -and $minor -ge 7)) {
             $script:PythonExe = $cmd.Source
+            $script:PythonArgs = $candidateArgs
             break
         }
     }
     if (-not $script:PythonExe) {
         Write-Host "[github-ops ERROR] Python 3.7+ interpreter not found." -ForegroundColor Red
-        Write-Host "  Tried: $($candidates -join ', ')" -ForegroundColor Yellow
+        Write-Host "  Tried: $(($candidates | ForEach-Object { $_.Display }) -join ', ')" -ForegroundColor Yellow
         Write-Host "  Install: winget install Python.Python.3" -ForegroundColor Cyan
         Write-Host "  Or download from: https://python.org/downloads/" -ForegroundColor Cyan
         exit 127
@@ -109,6 +115,17 @@ function Invoke-GitHubApi {
     if ($Compact) { $pyArgs += "-c" }
     if ($Field) { foreach ($f in $Field) { $pyArgs += @("-f", $f) } }
 
-    & $script:PythonExe $ApiScript @pyArgs
+    $backendArgs = @($script:PythonArgs) + @($ApiScript) + $pyArgs
+    & $script:PythonExe @backendArgs
     exit $LASTEXITCODE
+}
+
+function Write-Utf8NoBomFile {
+    param(
+        [Parameter(Mandatory)][string]$Path,
+        [Parameter(Mandatory)][string]$Value
+    )
+
+    $encoding = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($Path, $Value, $encoding)
 }

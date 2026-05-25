@@ -8,6 +8,7 @@ description: "通过已认证的 REST API（curl/urllib）进行 GitHub 仓库�
 **主要方式**：通过 `scripts/gh-api.py`（Python/urllib）或直接 `curl` 调用 GitHub REST API。
 **快捷脚本**：`scripts/gh-*.sh` 为常见任务提供便利封装。
 **认证来源**：`gh auth token`（优先）→ `GITHUB_TOKEN` / `GH_TOKEN` 环境变量回退。仅在 token 缺失时才需要执行 `gh auth login` 重新认证。
+**Windows Python**：Windows 包装器优先使用 `py -3`，然后回退到 `python`；不要假设存在 `py3` 或 `python3`。
 
 ## 快速开始
 
@@ -198,9 +199,17 @@ curl -s -X POST -H "Authorization: token $TOKEN" \
 
 示例：
 ```bash
+# Linux/macOS
 python3 scripts/gh-api.py user -f login
 python3 scripts/gh-api.py repos/owner/repo/issues -p -c
 python3 scripts/gh-api.py -X PATCH -d '{"state":"closed"}' repos/owner/repo/issues/1
+```
+
+Windows 直接调用 Python 后端时：
+```powershell
+py -3 scripts/gh-api.py user -f login
+py -3 scripts/gh-api.py repos/owner/repo/issues -p -c
+py -3 scripts/gh-api.py -X PATCH -d '{"state":"closed"}' repos/owner/repo/issues/1
 ```
 
 ## 常用 API 端点

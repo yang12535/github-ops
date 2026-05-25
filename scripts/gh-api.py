@@ -13,15 +13,10 @@ import urllib.request
 
 
 def _install_proxy_handler():
-    """Install a proxy handler if HTTP_PROXY or HTTPS_PROXY is set."""
-    proxy = (
-        os.environ.get("HTTPS_PROXY")
-        or os.environ.get("https_proxy")
-        or os.environ.get("HTTP_PROXY")
-        or os.environ.get("http_proxy")
-    )
-    if proxy:
-        handler = urllib.request.ProxyHandler({"https": proxy, "http": proxy})
+    """Install urllib's standard proxy handler when proxy env vars are set."""
+    proxies = urllib.request.getproxies()
+    if proxies:
+        handler = urllib.request.ProxyHandler(proxies)
         opener = urllib.request.build_opener(handler)
         urllib.request.install_opener(opener)
 

@@ -41,7 +41,7 @@ switch ($Command) {
         $payload = @{ title = $title; head = $head; base = $base }
         if ($body) { $payload.body = $body }
         $tmpFile = [System.IO.Path]::GetTempFileName()
-        $payload | ConvertTo-Json -Compress -Depth 10 | Set-Content -Path $tmpFile -Encoding utf8NoBOM -NoNewline
+        Write-Utf8NoBomFile -Path $tmpFile -Value ($payload | ConvertTo-Json -Compress -Depth 10)
         try {
             Invoke-GitHubApi "repos/$Repo/pulls" -Method POST -Data "@$tmpFile"
         } finally {

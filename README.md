@@ -6,7 +6,7 @@
 
 [![License](https://img.shields.io/badge/License-MIT-orange.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows-blue.svg)](#-快速开始)
-[![Python](https://img.shields.io/badge/Python-3.8%2B-green.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.7%2B-green.svg)](https://www.python.org/)
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-None-brightgreen.svg)](#技术亮点)
 
 </div>
@@ -59,6 +59,7 @@
 - **🎯 字段过滤** — 支持 `owner.login`、`0.name` 等点号路径提取，减少 JSON 噪音
 - **🔐 安全认证** — Token 文件权限检查（Linux: `S_IRWXG|S_IRWXO` / Windows: ACL）
 - **🔑 多级回退** — `gh auth token` → `GITHUB_TOKEN`/`GH_TOKEN` → `~/.github_token`
+- **🌐 代理兼容** — Python 后端使用 `urllib` 标准代理发现，支持 `http_proxy`/`https_proxy` 覆盖大写环境变量
 - **🐍 统一后端** — `gh-api.py` 处理所有 HTTP/JSON/分页逻辑。Linux/macOS 包装器引用同目录副本，`scripts/windows/*.ps1` 引用 `../gh-api.py`
 
 ---
@@ -67,8 +68,8 @@
 
 ### 环境要求
 
-- **Linux / macOS**: Bash + Python 3.8+
-- **Windows**: PowerShell 7+ + Python 3.8+
+- **Linux / macOS**: Bash + Python 3.7+
+- **Windows**: Windows PowerShell 5.1+ 或 PowerShell 7+ + Python 3.7+（优先 `py -3`，其次 `python`；不要假设存在 `py3`/`python3`）
 
 ### 1. 克隆仓库
 
@@ -112,7 +113,7 @@ chmod 600 ~/.github_token
 ./scripts/linux/gh-activity.sh yang12535 10
 ```
 
-**Windows**（PowerShell 7+ 脚本）
+**Windows**（Windows PowerShell 5.1+ / PowerShell 7+ 脚本）
 ```powershell
 # 查看当前用户
 ./scripts/windows/gh-user.ps1
@@ -171,13 +172,17 @@ github-ops/
 # 自动分页（需 Python 后端支持；curl fallback 不支持分页）
 ./scripts/gh-api-call.sh repos/owner/repo/issues -p
 
-# 字段过滤（直接调用 Python 后端）
+# 字段过滤（直接调用 Python 后端，Linux/macOS）
 python3 scripts/gh-api.py repos/owner/repo/issues -p -f "0.title"
+
+# 字段过滤（Windows）
+py -3 scripts/gh-api.py repos/owner/repo/issues -p -f "0.title"
 ```
 
 ### Python 底层引擎
 
 ```bash
+# Linux/macOS
 # 查询并提取字段
 python3 scripts/gh-api.py repos/owner/repo -f owner.login
 
@@ -187,6 +192,14 @@ python3 scripts/gh-api.py repos/owner/repo/issues -p -c
 # PATCH 更新 Issue
 python3 scripts/gh-api.py -X PATCH -d '{"state":"closed"}' \
   repos/owner/repo/issues/1
+```
+
+Windows 直接调用 Python 后端时使用 `py -3`（推荐）或 `python`：
+
+```powershell
+py -3 scripts/gh-api.py repos/owner/repo -f owner.login
+py -3 scripts/gh-api.py repos/owner/repo/issues -p -c
+py -3 scripts/gh-api.py -X PATCH -d '{"state":"closed"}' repos/owner/repo/issues/1
 ```
 
 ### PR Review 工作流
@@ -219,7 +232,7 @@ python3 scripts/gh-api.py -X PATCH -d '{"state":"closed"}' \
 ### 文件权限检查
 
 - **Linux/macOS**（Python 后端 + PowerShell）：拒绝 `group` 或 `others` 有任何权限的 token 文件（读/写/执行均不允许）
-- **Windows**（仅 PowerShell 包装脚本）：拒绝 `Users`/`Everyone`/`Authenticated Users` 可读取的 token 文件。注意：Windows 上直接运行 `python3 scripts/gh-api.py` 不会触发 ACL 检查
+- **Windows**（仅 PowerShell 包装脚本）：拒绝 `Users`/`Everyone`/`Authenticated Users` 可读取的 token 文件。注意：Windows 上直接运行 `py -3 scripts/gh-api.py` 或 `python scripts/gh-api.py` 不会触发 ACL 检查
 
 ```bash
 # 正确示例
@@ -248,8 +261,15 @@ chmod 600 ~/.github_token
 # Shell 脚本语法检查
 find scripts -name "*.sh" -exec bash -n {} \;
 
-# Python 编译检查（含 scripts/ 与 scripts/linux/）
+# Python 编译检查（Linux/macOS，含 scripts/ 与 scripts/linux/）
 find scripts -name "*.py" -exec python3 -m py_compile {} \;
+```
+
+```powershell
+# Python 编译检查（Windows）
+Get-ChildItem scripts -Recurse -Filter "*.py" | ForEach-Object {
+    py -3 -m py_compile $_.FullName
+}
 
 # PowerShell 语法检查（Windows）
 Get-ChildItem scripts/windows -Filter "*.ps1" | ForEach-Object {
