@@ -6,7 +6,7 @@
 
 ### 新增
 - **Windows PowerShell 移植版**（`scripts/windows/`）：
-  - `scripts/windows/*.ps1` — 薄 PowerShell 包装层，委托给 `scripts/gh-api.py`（Python 后端）；需要 Python 3.8+
+  - `scripts/windows/*.ps1` — 薄 PowerShell 包装层，委托给 `scripts/gh-api.py`（Python 后端）；需要 Python 3.7+
   - `_common.ps1` — 共享辅助函数，负责构建参数并调用 Python 后端
   - `gh-user.ps1` / `gh-repo.ps1` / `gh-issue.ps1` / `gh-pr.ps1` — 核心 Bash 脚本的 PowerShell 等价物
   - 认证回退链：`gh auth token` → `GITHUB_TOKEN`/`GH_TOKEN` 环境变量 → `~/.github_token` 文件 → `~/.config/github-ops/token` → `~/github_token.txt`
@@ -15,8 +15,12 @@
 
 ### 变更
 - README 已更新，增加各平台快速上手指南
+- Windows 文档改为使用 `py -3` / `python`，不再假设存在 `py3` 或 `python3`
 
 ### 修复
+- Windows Python 探测优先使用 `py -3`，避免 bare `py` 被 `py.ini`/`PY_PYTHON` 配置到 Python 2
+- Python API 后端代理处理改用 `urllib.request.getproxies()`，保留小写代理变量覆盖大写变量的标准优先级
+- Windows PowerShell 包装器改用 .NET UTF-8 无 BOM 写文件，兼容 Windows PowerShell 5.1
 - `gh-pr-review.sh`：处理 GitHub API 返回的 `null` 类型 `pull_request_review_id` 和 `user` 字段
 - `gh-pr-reviews.sh`：处理 GitHub API 返回的 `null` 类型 `user` 字段
 
